@@ -1,16 +1,16 @@
-const { exec } = require('child_process');
+const { exec: execCb } = require('child_process');
+const { promisify } = require('util');
 
-function checkVersions(nodeMajorVersion, npmMajorVersion) {
-  // Get Node.js version
-  const nodeVersion = process.versions.node.split('.');
-  const nodeMajor = parseInt(nodeVersion[0], 10);
+const exec = promisify(execCb);
 
-  // Get npm version
-  exec('npm -v', (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error getting npm version: ${error}`);
-      return;
-    }
+async function checkVersions(nodeMajorVersion, npmMajorVersion) {
+  try {
+    // Get Node.js version
+    const nodeVersion = process.versions.node.split('.');
+    const nodeMajor = parseInt(nodeVersion[0], 10);
+
+    // Get npm version
+    const { stdout } = await exec('npm -v');
     const npmVersion = stdout.trim().split('.');
     const npmMajor = parseInt(npmVersion[0], 10);
 
@@ -33,8 +33,10 @@ function checkVersions(nodeMajorVersion, npmMajorVersion) {
     } else if (npmMajor > npmMajorVersion) {
       console.warn(`npm major version is above ${npmMajorVersion}. Consider testing for compatibility.`);
     }
-  });
+  } catch (error) {
+    console.error(`Error getting version information: ${error}`);
+  }
 }
 
 // Example usage
-checkVersions(18, 10);
+checkVersions(19, 6);
